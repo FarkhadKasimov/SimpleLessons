@@ -28,7 +28,7 @@ public class Battle : MonoBehaviour
 
         yield return new WaitForSeconds(2);
 
-        _warriorList[0].TakeDamage(_warriorList[1].GetDamage());
+        _warriorList[0].TakeDamage(_warriorList[1].Damage);
 
         for (int i = 0; i < _warriorTexts.Count; i++)
         {
@@ -41,35 +41,27 @@ public enum DamageType { Melee, Range, Magic};
 
 public class Warrior
 {
-    protected int Health;
-    protected int Damage;
-    protected DamageType DmgType;
+    protected int _health;
+    protected DamageType _dmgType;
+
+    public virtual int Damage { get; set; }
+    public bool IsAlive { get { return _health > 0; } }
 
     public Warrior(int health, int damage, DamageType dmgType)
     {
-        Health = health;
+        _health = health;
         Damage = damage;
-        DmgType = dmgType;
+        _dmgType = dmgType;
     }
 
-    public void TakeDamage(int damage)
+    public virtual void TakeDamage(int damage)
     {
-        Health -= damage;
+        _health -= damage;
     }
 
-    public int GetDamage()
+    public virtual string GetInfo()
     {
-        return Damage;
-    }
-
-    public string GetInfo()
-    {
-        return $"HP: {Health}\n Dmg: {Damage}\n DamageType: {DmgType}";
-    }
-
-    public bool IsAlive()
-    {
-        return Health > 0;
+        return $"HP: {_health}\n Dmg: {Damage}\n DamageType: {_dmgType}";
     }
 }
 
@@ -81,15 +73,51 @@ public class Knight : Warrior
     {
         _armor = armor;
     }
+
+    public override void TakeDamage(int damage)
+    {
+        damage -= _armor/4;
+
+        if (damage > 0)
+        {
+            _health -= damage;
+        }
+        else
+        {
+            _health--;
+        }
+    }
+
+    public override string GetInfo()
+    {
+        return $"HP: {_health}\n Dmg: {Damage}\n Damage Type: {_dmgType}\n Armor: {_armor}";
+    }
 }
 
 public class Archer : Warrior
 {
     private float _criticalChanse;
 
+    public override int Damage 
+    {
+        get
+        {
+            float rand = Random.Range(0f, 1f);
+            if (rand <= _criticalChanse)
+                return base.Damage * 2;
+            else
+                return base.Damage;
+        }
+    }
+
     public Archer(int health, int damage, float criticalChanse) : base(health, damage, DamageType.Range)
     {
         _criticalChanse = criticalChanse;
+    }
+
+    public override string GetInfo()
+    {
+        return $"HP: {_health}\n Dmg: {Damage}\n Damage Type: {_dmgType}\n Critical Chanse: {_criticalChanse}";
     }
 }
 
@@ -102,6 +130,6 @@ public class Dragon : Warrior
 
     public void Heal(int heal)
     {
-        Health += heal;
+        _health += heal;
     }
 }
